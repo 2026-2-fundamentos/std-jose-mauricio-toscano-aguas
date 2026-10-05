@@ -1,51 +1,87 @@
 def main():
-    """
-    Antes de limpiar o analizar un conjunto de datos, un analista debe
-    documentar qué problemas tiene. En este laboratorio usted no va a limpiar
-    `data/ventas.csv.gz`: va a construir un reporte de calidad que deje evidencia
-    de sus problemas, tal como están en el archivo.
+    import pandas as pd
+    import json
+    import os
+    import re
+    
+    base_dir = os.path.dirname(__file__)
+    data_path = os.path.join(base_dir, "../data/ventas.csv.gz")
+    submission_dir = os.path.join(base_dir, "../submission")
+    os.makedirs(submission_dir, exist_ok=True)
+    report_path = os.path.join(submission_dir, "data_quality_report.json")
+    
+    df = pd.read_csv(data_path, keep_default_na=False)
 
-    Lea `data/ventas.csv.gz` sin modificar sus valores. Para trabajar con los
-    encabezados, normalícelos: páselos a minúsculas, elimine los espacios al
-    inicio y al final (y cualquier marca BOM) y reemplace los espacios
-    internos por `_`. Las columnas requeridas son `supplier_id`, `supplier`,
-    `country`, `city`, `purchase_date`, `amount`, `discount`, `weight`,
-    `units`, `unit_price` y `contact_email`.
+    def clean_col(c):
+        c = c.replace('\ufeff', '').replace('\xef\xbb\xbf', '')
+        c = c.strip().lower()
+        c = re.sub(r'\s+', '_', c)
+        return c
 
-    Escriba el reporte en `submission/data_quality_report.json` con estas
-    claves:
+    cleaned_cols = [clean_col(c) for c in df.columns]
+    df.columns = cleaned_cols
 
-    - `row_count`: cantidad de filas de datos.
-    - `column_count`: cantidad de columnas.
-    - `missing_required_columns`: lista ordenada de columnas requeridas que no
-      están en el archivo.
-    - `unexpected_columns`: lista ordenada de columnas del archivo que no son
-      requeridas.
-    - `duplicate_row_count`: cantidad de filas idénticas a una fila anterior.
-    - `duplicate_supplier_id_row_count`: cantidad de filas cuyo `supplier_id`
-      aparece más de una vez (cuente todas esas filas, no solo las
-      repetidas).
-    - `missing_value_count_by_column`: diccionario con la cantidad de valores
-      faltantes de cada columna. Considere faltantes las celdas vacías y las
-      que contienen `N/A`.
-    - `invalid_email_count`: cantidad de valores de `contact_email` que no
-      tienen la forma `usuario@dominio.extension`.
-    - `invalid_unit_count`: cantidad de valores numéricos de `units` que no son
-      enteros positivos. Los valores faltantes no se cuentan aquí.
-    - `country_values`: lista ordenada de los valores distintos de `country`,
-      escritos exactamente como aparecen en el archivo.
+    required_cols = [
+        'supplier_id', 'supplier', 'country', 'city', 'purchase_date', 
+        'amount', 'discount', 'weight', 'units', 'unit_price', 'contact_email'
+    ]
 
-    La función también debe retornar el reporte como un diccionario.
+    missing_required_columns = sorted([c for c in required_cols if c not in cleaned_cols])
+    unexpected_columns = sorted([c for c in cleaned_cols if c not in required_cols])
 
-    Ejemplo del formato del reporte:
+    duplicate_row_count = int(df.duplicated().sum())
 
-        {
-          "row_count": 103,
-          "column_count": 11,
-          "missing_required_columns": [],
-          ...
-          "country_values": [" Colombia ", "CO", ...]
-        }
-    """
+    if 'supplier_id' in df.columns:
+        duplicate_supplier_id_row_count = int(df.duplicated(subset=['supplier_id'], keep=False).sum())
+    else:
+        duplicate_supplier_id_row_count = 0
 
-    raise NotImplementedError
+    missing_value_count_by_column = {}
+    for c in df.columns:
+        missing = df[c].astype(str).str.strip().isin(['', 'N/A']).sum()
+        missing_value_count_by_column[c] = int(missing)
+
+    if 'contact_email' in df.columns:
+        def is_invalid(e):
+            e = str(e).strip()
+            if e in ['', 'N/A']: return False
+            return not bool(re.match(r'^[^@]+@[^@]+\.[^@]+$', e))
+        invalid_email_count = sum(is_invalid(e) for e in df['contact_email'])
+    else:
+        invalid_email_count = 0
+
+    if 'units' in df.columns:
+        def is_invalid_unit(u):
+            u = str(u).strip()
+            if u in ['', 'N/A']: return False
+            try:
+                val = float(u)
+                return val <= 0 or not val.is_integer()
+            except:
+                return True
+        invalid_unit_count = sum(is_invalid_unit(u) for u in df['units'])
+    else:
+        invalid_unit_count = 0
+
+    if 'country' in df.columns:
+        country_values = sorted(df['country'].unique().tolist())
+    else:
+        country_values = []
+
+    report = {
+        "row_count": len(df),
+        "column_count": len(df.columns),
+        "missing_required_columns": missing_required_columns,
+        "unexpected_columns": unexpected_columns,
+        "duplicate_row_count": duplicate_row_count,
+        "duplicate_supplier_id_row_count": duplicate_supplier_id_row_count,
+        "missing_value_count_by_column": missing_value_count_by_column,
+        "invalid_email_count": invalid_email_count,
+        "invalid_unit_count": invalid_unit_count,
+        "country_values": country_values
+    }
+
+    with open(report_path, "wt", encoding="utf-8") as f:
+        json.dump(report, f, indent=2)
+
+    return report

@@ -24,4 +24,5 @@
 --  3  2019  550.998571
 --
 --  Escriba su consulta debajo de esta línea.
---
+
+SELECT CAST(strftime('%Y', c23) AS INTEGER) AS YEAR, AVG(c21) FROM tbl2 GROUP BY YEAR;
