@@ -1,12 +1,9 @@
 def pregunta_06():
-    """
-    Usando `data/tbl1.tsv`, obtenga los valores distintos de la columna `c4`,
-    conviértalos a mayúsculas y retórnelos como una lista ordenada
-    alfabéticamente.
-
-    Ejemplo del formato de la respuesta:
-
-        ["A", "B", "C", "D", "E", "F", "G"]
-    """
-
-    raise NotImplementedError
+    import pandas as pd
+    import os
+    file_path_0 = os.path.join(os.path.dirname(__file__), "../data/tbl0.tsv")
+    file_path_1 = os.path.join(os.path.dirname(__file__), "../data/tbl1.tsv")
+    file_path_2 = os.path.join(os.path.dirname(__file__), "../data/tbl2.tsv")
+    
+    df = pd.read_csv(file_path_1, sep='\t')
+    return sorted(df['c4'].str.upper().unique().tolist())

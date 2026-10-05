@@ -1,16 +1,9 @@
 def pregunta_04():
-    """
-    Usando `data/tbl0.tsv`, calcule el promedio de la columna `c2` para cada
-    categoría de la columna `c1`. Retorne una Serie de Pandas cuyo índice son
-    las categorías, en orden alfabético, y cuyos valores son los promedios.
-
-    Ejemplo del formato de la respuesta:
-
-        c1
-        A    4.6250
-        B    5.1429
-        C    5.4000
-        ...
-    """
-
-    raise NotImplementedError
+    import pandas as pd
+    import os
+    file_path_0 = os.path.join(os.path.dirname(__file__), "../data/tbl0.tsv")
+    file_path_1 = os.path.join(os.path.dirname(__file__), "../data/tbl1.tsv")
+    file_path_2 = os.path.join(os.path.dirname(__file__), "../data/tbl2.tsv")
+    
+    df = pd.read_csv(file_path_0, sep='\t')
+    return df.groupby('c1')['c2'].mean()
