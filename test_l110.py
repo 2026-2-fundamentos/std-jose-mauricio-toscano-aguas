@@ -1,6 +1,6 @@
 import pandas as pd
 
-df = pd.read_csv('L110_rentabilidad_de_ventas/data/superstore_orders.csv.gz', sep=';', encoding='utf-8-sig')
+df = pd.read_csv('L110_rentabilidad_de_ventas/data/superstore_orders.csv.gz', sep=';', decimal=',')
 
 df['is_loss'] = df['Profit'] < 0
 df['lost_profit_val'] = df.apply(lambda row: -row['Profit'] if row['is_loss'] else 0, axis=1)
