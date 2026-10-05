@@ -1,12 +1,14 @@
 def pregunta_08():
-    """
-    Repita la pregunta 7, pero ahora cada lista de letras debe contener cada
-    letra una sola vez y estar ordenada alfabéticamente. Retorne una lista de
-    tuplas `(valor, letras)` ordenada por el valor.
-
-    Ejemplo del formato de la respuesta:
-
-        [(0, ["C"]), (1, ["B", "E"]), (2, ["A", "E"]), ...]
-    """
-
-    raise NotImplementedError
+    import gzip
+    import os
+    file_path = os.path.join(os.path.dirname(__file__), "../data/data.csv.gz")
+    def read_data():
+        with gzip.open(file_path, "rt") as f:
+            return [line.strip().split('\t') for line in f if line.strip()]
+    
+    d = {}
+    for row in read_data():
+        v = int(row[1])
+        if v not in d: d[v] = set()
+        d[v].add(row[0])
+    return [(k, sorted(list(v))) for k, v in sorted(d.items())]

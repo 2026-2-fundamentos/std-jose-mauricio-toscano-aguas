@@ -1,14 +1,14 @@
 def pregunta_07():
-    """
-    Para cada valor distinto de la segunda columna (`value`), construya la
-    lista de letras de la primera columna (`letter`) que aparecen con ese
-    valor. Conserve las letras repetidas y el orden en que aparecen en el
-    archivo. Retorne una lista de tuplas `(valor, letras)` ordenada por el
-    valor.
-
-    Ejemplo del formato de la respuesta:
-
-        [(0, ["C"]), (1, ["E", "B", "E"]), (2, ["A", "E"]), ...]
-    """
-
-    raise NotImplementedError
+    import gzip
+    import os
+    file_path = os.path.join(os.path.dirname(__file__), "../data/data.csv.gz")
+    def read_data():
+        with gzip.open(file_path, "rt") as f:
+            return [line.strip().split('\t') for line in f if line.strip()]
+    
+    d = {}
+    for row in read_data():
+        v = int(row[1])
+        if v not in d: d[v] = []
+        d[v].append(row[0])
+    return sorted(d.items())

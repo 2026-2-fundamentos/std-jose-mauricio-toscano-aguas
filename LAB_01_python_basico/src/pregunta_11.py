@@ -1,13 +1,14 @@
 def pregunta_11():
-    """
-    La cuarta columna (`codes`) contiene letras minúsculas separadas por
-    comas. Para cada una de esas letras, sume los valores de la segunda
-    columna (`value`) de los registros en los que aparece. Retorne un
-    diccionario `{letra: suma}` con las letras en orden alfabético.
-
-    Ejemplo del formato de la respuesta:
-
-        {"a": 122, "b": 49, "c": 91, ...}
-    """
-
-    raise NotImplementedError
+    import gzip
+    import os
+    file_path = os.path.join(os.path.dirname(__file__), "../data/data.csv.gz")
+    def read_data():
+        with gzip.open(file_path, "rt") as f:
+            return [line.strip().split('\t') for line in f if line.strip()]
+    
+    d = {}
+    for row in read_data():
+        v = int(row[1])
+        for c in row[3].split(','):
+            d[c] = d.get(c, 0) + v
+    return dict(sorted(d.items()))
